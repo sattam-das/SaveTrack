@@ -1,0 +1,41 @@
+@import "@fontsource/inter/400.css";
+@import "@fontsource/inter/500.css";
+@import "@fontsource/inter/600.css";
+@import "@fontsource/inter/700.css";
+@import "@fontsource/inter/800.css";
+@import "@fontsource/material-symbols-outlined/index.css";
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+body { 
+    background-color: #3D2C22; 
+    color: #e3e2e2; 
+    scrollbar-gutter: stable; 
+}
+
+/* Material Symbols icon class — @fontsource only ships @font-face rules,
+   so we define the class manually to activate ligature-based icon rendering. */
+.material-symbols-outlined {
+  font-family: 'Material Symbols Outlined', sans-serif;
+  font-weight: normal;
+  font-style: normal;
+  font-size: 24px;
+  line-height: 1;
+  letter-spacing: normal;
+  text-transform: none;
+  display: inline-block;
+  white-space: nowrap;
+  word-wrap: normal;
+  direction: ltr;
+  -webkit-font-feature-settings: 'liga';
+  font-feature-settings: 'liga';
+  -webkit-font-smoothing: antialiased;
+  font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+}
+
+::-webkit-scrollbar { width: 8px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: rgba(187, 115, 75, 0.2); border-radius: 10px; }
+::-webkit-scrollbar-thumb:hover { background: rgba(187, 115, 75, 0.4); }

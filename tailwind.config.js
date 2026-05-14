@@ -1,0 +1,86 @@
+/** @type {import('tailwindcss').Config} */
+export default {
+  content: ['./index.html', './src/**/*.{js,ts}'],
+  darkMode: 'class',
+  theme: {
+    extend: {
+      colors: {
+        'on-secondary-fixed-variant': '#474746',
+        'tertiary-container': '#ffd892',
+        'secondary-container': '#474746',
+        'inverse-primary': '#8c4e2e',
+        'on-primary-container': '#753c1f',
+        'on-tertiary-fixed-variant': '#5c4209',
+        surface: '#3D2C22',
+        'on-surface': '#e3e2e2',
+        'primary-fixed-dim': '#d68d60',
+        'on-error': '#690005',
+        'on-tertiary': '#412d00',
+        'on-primary-fixed': '#30160a',
+        'inverse-on-surface': '#303031',
+        secondary: '#c8c6c5',
+        'on-background': '#e3e2e2',
+        'on-surface-variant': '#cbb5a8',
+        'on-secondary-container': '#b7b5b4',
+        background: '#3D2C22',
+        'inverse-surface': '#e3e2e2',
+        'primary-container': '#BB734B',
+        'secondary-fixed': '#e5e2e1',
+        'on-tertiary-fixed': '#271900',
+        'error-container': '#93000a',
+        error: '#ffb4ab',
+        'surface-container-high': '#4a362b',
+        'on-error-container': '#ffdad6',
+        tertiary: '#fff9f4',
+        'secondary-fixed-dim': '#c8c6c5',
+        'surface-container-lowest': '#2e2119',
+        'on-primary': '#452210',
+        'surface-container': '#36271e',
+        'surface-container-highest': '#523c30',
+        'on-primary-fixed-variant': '#5c3018',
+        'surface-variant': '#523c30',
+        outline: '#8a7569',
+        'surface-container-low': '#30221a',
+        'tertiary-fixed-dim': '#e7c17d',
+        'on-tertiary-container': '#795d23',
+        'surface-tint': '#BB734B',
+        'tertiary-fixed': '#ffdea5',
+        'on-secondary': '#303030',
+        primary: '#ffe8da',
+        'surface-bright': '#5c4336',
+        'on-secondary-fixed': '#1b1b1c',
+        'outline-variant': '#4a3a30',
+        'primary-fixed': '#eeb495',
+        'surface-dim': '#3D2C22'
+      },
+      borderRadius: {
+        DEFAULT: '0.25rem',
+        lg: '0.5rem',
+        xl: '0.75rem',
+        full: '9999px'
+      },
+      spacing: {
+        xl: '32px',
+        gutter: '20px',
+        base: '8px',
+        xs: '4px',
+        md: '16px',
+        'margin-page': '40px',
+        sm: '12px',
+        lg: '24px'
+      },
+      fontFamily: {
+        'label-sm': ['Inter'],
+        'headline-lg': ['Inter'],
+        'body-lg': ['Inter'],
+        'headline-md': ['Inter'],
+        'body-md': ['Inter'],
+        'label-md': ['Inter'],
+        'display-lg': ['Inter'],
+        'numeric-data': ['Inter'],
+        'display-md': ['Inter']
+      }
+    }
+  },
+  plugins: [require('@tailwindcss/container-queries')]
+};

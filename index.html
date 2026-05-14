@@ -1,0 +1,466 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>SaveTrack Dashboard</title>
+<link rel="stylesheet" href="/src/styles.css" />
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="font-body-md text-on-surface bg-surface min-h-screen">
+<!-- TopAppBar -->
+<header class="fixed top-0 left-0 right-0 z-50 bg-neutral-900 dark:bg-[#3D2C22] border-b border-neutral-800 dark:border-[#2C2C2C]">
+<div class="flex justify-between items-center w-full px-5 py-4 max-w-7xl mx-auto">
+<div class="flex items-center gap-3">
+<div class="w-10 h-10 rounded-full overflow-hidden border border-outline-variant flex items-center justify-center bg-surface-container-high">
+<img alt="App Icon" src="./src-tauri/icons/128x128.png" class="w-full h-full object-cover"/>
+</div>
+<h1 class="text-xl font-bold text-[#BB734B] dark:text-[#BB734B] tracking-tight">SaveTrack</h1>
+</div>
+<div class="flex items-center gap-4 relative">
+    <button id="notifications-btn" class="relative material-symbols-outlined text-neutral-400 hover:bg-neutral-800/50 dark:hover:bg-[#1E1E1E] p-2 rounded-lg transition-all duration-200">
+        notifications
+        <span id="notifications-badge" class="hidden absolute top-1 right-1 w-2 h-2 rounded-full bg-[#BB734B]"></span>
+    </button>
+    <!-- Notifications Dropdown -->
+    <div id="notifications-panel" class="hidden absolute right-0 top-12 w-80 bg-neutral-900 dark:bg-[#2A1F18] border border-outline-variant rounded-xl shadow-2xl z-50 overflow-hidden">
+        <div class="flex items-center justify-between px-4 py-3 border-b border-outline-variant">
+            <h3 class="font-headline-sm text-on-surface text-sm font-semibold">Notifications</h3>
+            <button id="notifications-clear-btn" class="text-xs text-primary-container hover:underline font-label-sm">Mark all read</button>
+        </div>
+        <ul id="notifications-list" class="max-h-72 overflow-y-auto divide-y divide-outline-variant">
+            <!-- populated by JS -->
+        </ul>
+        <div id="notifications-empty" class="hidden px-4 py-6 text-center text-on-surface-variant font-body-sm text-sm">
+            You're all caught up! 🎉
+        </div>
+    </div>
+</div>
+</div>
+</header>
+<main id="dashboard-view" class="pt-24 pb-32 px-5 max-w-7xl mx-auto transition-opacity duration-300">
+<!-- Bento Grid Layout -->
+<div class="grid grid-cols-1 md:grid-cols-12 gap-6">
+<div id="log-reminder-banner" class="hidden md:col-span-12 bg-surface-container-low border border-outline-variant rounded-xl p-4 text-on-surface-variant">
+    You have not logged today. Add a quick entry to keep your streak alive.
+</div>
+<!-- Stats Hero Card (Span 8) -->
+<div class="md:col-span-8 bg-surface-container-low border border-outline-variant rounded-xl p-lg relative overflow-hidden">
+<div class="absolute top-0 right-0 p-lg opacity-10">
+<span class="material-symbols-outlined text-[120px]" data-icon="account_balance_wallet">account_balance_wallet</span>
+</div>
+<div class="relative z-10">
+<p class="font-label-md text-label-md text-on-surface-variant uppercase tracking-widest mb-2">Total Saved</p>
+<h2 id="total-saved-display" class="font-display-lg text-display-lg text-primary-container mb-6">$0.00</h2>
+<div class="space-y-4">
+<div class="flex justify-between items-end">
+<div>
+<p id="dashboard-progress-label" class="font-label-sm text-label-sm text-on-surface-variant mb-1">Savings Goal Progress</p>
+<p id="goal-progress-display" class="font-headline-md text-headline-md text-on-surface">0% Achieved</p>
+</div>
+<div class="text-right">
+<p id="dashboard-target-label" class="font-label-sm text-label-sm text-on-surface-variant mb-1">Target</p>
+<p id="target-display" class="font-numeric-data text-numeric-data">$0.00</p>
+</div>
+</div>
+<!-- Neon Progress Bar -->
+<div class="h-3 w-full bg-surface-container-highest rounded-full overflow-hidden">
+<div id="goal-progress-bar" class="h-full bg-primary-container shadow-[0_0_12px_rgba(187,115,75,0.4)] transition-all duration-1000 ease-out" style="width: 0%"></div>
+</div>
+</div>
+</div>
+</div>
+<!-- Quick Action (Span 4) -->
+<div class="md:col-span-4 flex flex-col gap-6">
+<div id="open-log-modal" class="bg-primary-container rounded-xl p-lg flex flex-col justify-between items-start h-full active:scale-[0.98] transition-all duration-200 cursor-pointer group shadow-[0_10px_30px_rgba(187,115,75,0.1)]">
+<div class="w-12 h-12 rounded-lg bg-on-primary flex items-center justify-center mb-12">
+<span class="material-symbols-outlined text-primary-container" data-icon="add_circle">add_circle</span>
+</div>
+<div>
+<h3 class="font-headline-lg text-headline-lg text-on-primary mb-2">Log Savings</h3>
+<p class="font-label-md text-label-md text-on-primary/70">Add funds to your wealth flow instantly.</p>
+</div>
+<span class="material-symbols-outlined text-on-primary self-end group-hover:translate-x-2 transition-transform" data-icon="arrow_forward">arrow_forward</span>
+</div>
+</div>
+<!-- Streak Card (Span 4) -->
+<div class="md:col-span-4 bg-surface-container-low border border-outline-variant rounded-xl p-lg">
+<p class="font-label-md text-on-surface-variant uppercase tracking-widest mb-2">Daily Streak</p>
+<h3 id="daily-streak-value" class="font-display-md text-primary-container">0 days</h3>
+</div>
+<!-- Monthly Target Card (Span 4) -->
+<div class="md:col-span-4 bg-surface-container-low border border-outline-variant rounded-xl p-lg">
+<p class="font-label-md text-on-surface-variant uppercase tracking-widest mb-2">Monthly Target</p>
+<div class="flex justify-between items-center mb-2">
+<span id="monthly-progress-value" class="font-headline-md text-on-surface">$0.00</span>
+<span id="monthly-target-value" class="font-label-sm text-on-surface-variant">$0.00</span>
+</div>
+<div class="h-2 w-full bg-surface-container-highest rounded-full overflow-hidden">
+<div id="monthly-progress-bar" class="h-full bg-primary-container transition-all"></div>
+</div>
+</div>
+<!-- Weekly Target Card (Span 4) -->
+<div class="md:col-span-4 bg-surface-container-low border border-outline-variant rounded-xl p-lg">
+<p class="font-label-md text-on-surface-variant uppercase tracking-widest mb-2">Weekly Target</p>
+<div class="flex justify-between items-center mb-2">
+<span id="weekly-progress-value" class="font-headline-md text-on-surface">$0.00</span>
+<span id="weekly-target-value" class="font-label-sm text-on-surface-variant">$0.00</span>
+</div>
+<div class="h-2 w-full bg-surface-container-highest rounded-full overflow-hidden">
+<div id="weekly-progress-bar" class="h-full bg-primary-container transition-all"></div>
+</div>
+</div>
+<!-- Recent Logs List (Span 7) -->
+<div class="md:col-span-7 bg-surface-container border border-outline-variant rounded-xl p-lg flex flex-col max-h-[500px]">
+<div class="flex justify-between items-center mb-6">
+<h3 class="font-headline-md text-headline-md">Recent Logs</h3>
+<button id="view-all-history-btn" class="font-label-sm text-label-sm text-primary-container uppercase tracking-wider hover:underline">View All</button>
+</div>
+<div id="recent-logs-list" class="overflow-y-auto space-y-4 pr-2"></div>
+</div>
+<!-- Visualization Card (Span 5) -->
+<div class="md:col-span-5 bg-surface-container-low border border-outline-variant rounded-xl p-lg flex flex-col justify-between">
+<div>
+<h3 class="font-headline-md text-headline-md mb-2">Growth Analysis</h3>
+<p id="savings-rate-insight" class="font-label-md text-label-md text-on-surface-variant mb-6">Calculating savings insight...</p>
+</div>
+<div class="h-48 w-full relative">
+    <canvas id="growthChart"></canvas>
+</div>
+<div id="growth-chart-labels" class="flex justify-between mt-4 font-label-sm text-label-sm text-on-surface-variant uppercase tracking-widest">
+</div>
+</div>
+<!-- Activity Calendar (Span 12) -->
+<div class="md:col-span-12 bg-surface-container-low border border-outline-variant rounded-xl p-lg">
+    <div class="flex items-center justify-between mb-6">
+        <h3 class="font-headline-md text-headline-md">Activity Calendar</h3>
+        <div class="flex items-center gap-3">
+            <button id="cal-prev" class="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-surface-container-high transition-colors text-on-surface-variant hover:text-on-surface">
+                <span class="material-symbols-outlined text-[20px]" data-icon="chevron_left">chevron_left</span>
+            </button>
+            <span id="cal-month-label" class="font-label-md text-on-surface uppercase tracking-widest min-w-[120px] text-center"></span>
+            <button id="cal-next" class="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-surface-container-high transition-colors text-on-surface-variant hover:text-on-surface">
+                <span class="material-symbols-outlined text-[20px]" data-icon="chevron_right">chevron_right</span>
+            </button>
+        </div>
+    </div>
+    <!-- Day labels -->
+    <div class="grid grid-cols-7 mb-2">
+        <div class="text-center font-label-sm text-on-surface-variant uppercase tracking-widest py-1">Mon</div>
+        <div class="text-center font-label-sm text-on-surface-variant uppercase tracking-widest py-1">Tue</div>
+        <div class="text-center font-label-sm text-on-surface-variant uppercase tracking-widest py-1">Wed</div>
+        <div class="text-center font-label-sm text-on-surface-variant uppercase tracking-widest py-1">Thu</div>
+        <div class="text-center font-label-sm text-on-surface-variant uppercase tracking-widest py-1">Fri</div>
+        <div class="text-center font-label-sm text-on-surface-variant uppercase tracking-widest py-1">Sat</div>
+        <div class="text-center font-label-sm text-on-surface-variant uppercase tracking-widest py-1">Sun</div>
+    </div>
+    <!-- Calendar grid -->
+    <div id="cal-grid" class="grid grid-cols-7 gap-1"></div>
+    <!-- Tooltip -->
+    <div id="cal-tooltip" class="hidden absolute z-50 bg-surface-container-high border border-outline-variant rounded-lg px-3 py-2 text-on-surface font-label-sm shadow-xl pointer-events-none"></div>
+</div>
+</div>
+</main>
+
+<!-- Goals View -->
+<main id="goals-view" class="hidden pt-24 pb-32 px-5 max-w-7xl mx-auto transition-opacity duration-300 opacity-0">
+    <header class="flex justify-between items-center mb-8">
+        <div>
+            <h1 class="font-display-md text-display-md text-on-surface">Goals & Targets</h1>
+            <p class="font-body-md text-body-md text-on-surface-variant">Manage your financial milestones.</p>
+        </div>
+    </header>
+
+    <!-- Global Targets -->
+    <section class="mb-8">
+        <h2 class="font-headline-md text-headline-md text-on-surface mb-4">Global Targets</h2>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div class="bg-surface-container rounded-xl p-6 border border-outline-variant flex justify-between items-center shadow-lg">
+                <div>
+                    <p class="font-label-md text-on-surface-variant uppercase tracking-wider mb-1">Monthly Goal</p>
+                    <h3 id="goals-monthly-target" class="font-display-md text-primary-container">$0.00</h3>
+                </div>
+                <button id="edit-monthly-target-btn" class="bg-primary-container text-on-primary px-6 py-3 rounded-lg font-bold hover:brightness-110 transition-all shadow-[0_0_15px_rgba(187,115,75,0.2)]">Edit</button>
+            </div>
+            <div class="bg-surface-container rounded-xl p-6 border border-outline-variant flex justify-between items-center shadow-lg">
+                <div>
+                    <p class="font-label-md text-on-surface-variant uppercase tracking-wider mb-1">Weekly Goal</p>
+                    <h3 id="goals-weekly-target" class="font-display-md text-primary-container">$0.00</h3>
+                </div>
+                <button id="edit-weekly-target-btn" class="bg-primary-container text-on-primary px-6 py-3 rounded-lg font-bold hover:brightness-110 transition-all shadow-[0_0_15px_rgba(187,115,75,0.2)]">Edit</button>
+            </div>
+        </div>
+    </section>
+
+    <!-- My Goals -->
+    <section>
+        <div class="flex justify-between items-end mb-4">
+            <h2 class="font-headline-md text-headline-md text-on-surface">My Goals</h2>
+            <button id="create-goal-btn" class="text-primary-container flex items-center gap-1 font-label-md hover:underline">
+                <span class="material-symbols-outlined text-[18px]">add</span> New Goal
+            </button>
+        </div>
+        
+        <div id="goals-list" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <!-- Goal cards rendered here -->
+        </div>
+    </section>
+
+    <section id="archived-goals-section" class="mt-10">
+        <div class="flex justify-between items-end mb-4">
+            <h2 class="font-headline-md text-headline-md text-on-surface">Archived Goals</h2>
+        </div>
+        <div id="archived-goals-list" class="grid grid-cols-1 md:grid-cols-2 gap-4"></div>
+    </section>
+</main>
+
+<!-- History View -->
+<main id="history-view" class="hidden pt-24 pb-32 px-5 max-w-7xl mx-auto transition-opacity duration-300 opacity-0">
+    <header class="flex justify-between items-center mb-8">
+        <div>
+            <h1 class="font-display-md text-display-md text-on-surface">Analytics & History</h1>
+            <p class="font-body-md text-body-md text-on-surface-variant">Your lifetime savings performance.</p>
+        </div>
+    </header>
+
+    <!-- Lifetime Stats -->
+    <section class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
+        <div class="bg-surface-container-low border border-outline-variant rounded-xl p-5 shadow-md">
+            <p class="font-label-md text-on-surface-variant uppercase tracking-wider mb-1">Total Saved</p>
+            <h3 id="history-total-saved" class="font-display-md text-primary-container">$0.00</h3>
+        </div>
+        <div class="bg-surface-container-low border border-outline-variant rounded-xl p-5 shadow-md">
+            <p class="font-label-md text-on-surface-variant uppercase tracking-wider mb-1">Avg. Per Day</p>
+            <h3 id="history-avg-day" class="font-display-md text-on-surface">$0.00</h3>
+        </div>
+        <div class="bg-surface-container-low border border-outline-variant rounded-xl p-5 shadow-md">
+            <p class="font-label-md text-on-surface-variant uppercase tracking-wider mb-1">Best Day</p>
+            <h3 id="history-best-day" class="font-display-md text-on-surface">$0.00</h3>
+        </div>
+    </section>
+
+    <!-- Historical Chart -->
+    <section class="bg-surface-container border border-outline-variant rounded-xl p-6 shadow-lg">
+        <div class="flex justify-between items-center mb-6">
+            <h2 class="font-headline-md text-headline-md text-on-surface">Growth Over Time</h2>
+            <select id="chart-timeframe" class="bg-surface-container-high border border-outline-variant text-on-surface text-sm rounded-lg px-3 py-2 outline-none">
+                <option value="7">Last 7 Days</option>
+                <option value="30" selected>Last 30 Days</option>
+                <option value="all">All Time</option>
+            </select>
+        </div>
+        <div class="h-80 w-full relative">
+            <canvas id="historyChart"></canvas>
+        </div>
+    </section>
+
+    <section class="bg-surface-container border border-outline-variant rounded-xl p-6 shadow-lg mt-6">
+        <div class="flex justify-between items-center mb-4">
+            <h2 class="font-headline-md text-headline-md text-on-surface">Monthly Breakdown</h2>
+        </div>
+        <div class="overflow-x-auto">
+            <table class="w-full text-left text-sm">
+                <thead class="text-on-surface-variant">
+                    <tr>
+                        <th class="py-2">Month</th>
+                        <th class="py-2">Total</th>
+                        <th class="py-2">Avg / Day</th>
+                        <th class="py-2">Vs Target</th>
+                    </tr>
+                </thead>
+                <tbody id="monthly-breakdown-body"></tbody>
+            </table>
+        </div>
+    </section>
+
+    <section class="bg-surface-container border border-outline-variant rounded-xl p-6 shadow-lg mt-6">
+        <div class="flex justify-between items-center mb-4">
+            <h2 class="font-headline-md text-headline-md text-on-surface">Income Sources</h2>
+        </div>
+        <div id="source-breakdown" class="space-y-2 text-sm"></div>
+    </section>
+</main>
+
+<!-- Settings View -->
+<main id="settings-view" class="hidden pt-24 pb-32 px-5 max-w-7xl mx-auto transition-opacity duration-300 opacity-0">
+    <header class="flex justify-between items-center mb-8">
+        <div>
+            <h1 class="font-display-md text-display-md text-on-surface">Settings</h1>
+            <p class="font-body-md text-body-md text-on-surface-variant">Manage your data and app preferences.</p>
+        </div>
+    </header>
+
+    <section class="space-y-4">
+        <div class="bg-surface-container border border-outline-variant rounded-xl p-6 shadow-md flex justify-between items-center">
+            <div>
+                <h3 class="font-headline-sm text-on-surface mb-1">Currency Symbol</h3>
+                <p class="font-body-sm text-on-surface-variant">Choose your preferred currency.</p>
+            </div>
+            <div class="flex gap-2 items-center">
+                <select id="currency-select" class="bg-surface-container-high border border-outline-variant text-on-surface rounded-lg px-4 py-2 outline-none focus:border-primary-container">
+                    <option value="$">$ (USD)</option>
+                    <option value="€">€ (EUR)</option>
+                    <option value="£">£ (GBP)</option>
+                    <option value="¥">¥ (JPY)</option>
+                    <option value="₹">₹ (INR)</option>
+                </select>
+                <button id="save-currency-btn" class="hidden px-4 py-2 bg-primary-container text-on-primary rounded-lg font-label-md hover:brightness-110 transition-all">Save</button>
+            </div>
+        </div>
+
+        <div class="bg-surface-container border border-outline-variant rounded-xl p-6 shadow-md flex justify-between items-center">
+            <div>
+                <h3 class="font-headline-sm text-on-surface mb-1">Export Data</h3>
+                <p class="font-body-sm text-on-surface-variant">Download your savings history as a JSON file.</p>
+            </div>
+            <button id="export-data-btn" class="px-4 py-2 bg-primary-container text-on-primary rounded-lg font-label-md hover:brightness-110 transition-all">Export</button>
+        </div>
+        
+        <div class="bg-surface-container border border-outline-variant rounded-xl p-6 shadow-md flex justify-between items-center">
+            <div>
+                <h3 class="font-headline-sm text-on-surface mb-1">Import Data</h3>
+                <p class="font-body-sm text-on-surface-variant">Restore your savings history from a JSON file.</p>
+            </div>
+            <div class="flex gap-2 items-center">
+                <input type="file" id="import-file-input" accept="application/json" class="hidden">
+                <button id="import-data-btn" class="px-4 py-2 border border-outline-variant text-on-surface rounded-lg font-label-md hover:bg-surface-container-high transition-all">Import</button>
+            </div>
+        </div>
+        
+        <div class="bg-surface-container border border-outline-variant rounded-xl p-6 shadow-md flex justify-between items-center">
+            <div>
+                <h3 class="font-headline-sm text-[#ef4444] mb-1">Wipe Data</h3>
+                <p class="font-body-sm text-on-surface-variant">Permanently delete all logs and goals. Cannot be undone.</p>
+            </div>
+            <button id="wipe-data-btn" class="px-4 py-2 border border-[#ef4444] text-[#ef4444] rounded-lg font-label-md hover:bg-[#ef4444] hover:text-white transition-all">Wipe Data</button>
+        </div>
+    </section>
+</main>
+
+<!-- BottomNavBar -->
+<nav class="fixed bottom-0 left-0 w-full z-50 bg-neutral-900/95 dark:bg-[#3D2C22]/95 backdrop-blur-md border-t border-neutral-800 dark:border-[#2C2C2C] shadow-2xl">
+<div class="flex justify-around items-center px-4 py-3 pb-safe max-w-7xl mx-auto">
+<!-- Active: Dashboard -->
+<a id="nav-dashboard" class="flex-1 flex flex-col items-center justify-center text-[#BB734B] dark:text-[#BB734B] relative after:content-[''] after:absolute after:-bottom-1 after:w-1 after:h-1 after:bg-[#BB734B] after:rounded-full cursor-pointer transition-transform duration-150">
+<span class="material-symbols-outlined mb-1" data-icon="dashboard" style="font-variation-settings: 'FILL' 1;">dashboard</span>
+<span class="font-inter text-[11px] font-semibold uppercase tracking-wider">Dashboard</span>
+</a>
+<a id="nav-history" class="flex-1 flex flex-col items-center justify-center text-neutral-500 dark:text-neutral-600 hover:text-neutral-200 transition-colors cursor-pointer transition-transform duration-150">
+<span class="material-symbols-outlined mb-1" data-icon="insights">insights</span>
+<span class="font-inter text-[11px] font-semibold uppercase tracking-wider">Analytics</span>
+</a>
+<a id="nav-goals" class="flex-1 flex flex-col items-center justify-center text-neutral-500 dark:text-neutral-600 hover:text-neutral-200 transition-colors cursor-pointer transition-transform duration-150">
+<span class="material-symbols-outlined mb-1" data-icon="track_changes">track_changes</span>
+<span class="font-inter text-[11px] font-semibold uppercase tracking-wider">Goals</span>
+</a>
+<a id="nav-settings" class="flex-1 flex flex-col items-center justify-center text-neutral-500 dark:text-neutral-600 hover:text-neutral-200 transition-colors cursor-pointer transition-transform duration-150">
+<span class="material-symbols-outlined mb-1" data-icon="settings">settings</span>
+<span class="font-inter text-[11px] font-semibold uppercase tracking-wider">Settings</span>
+</a>
+</div>
+</nav>
+
+<!-- Log Savings Modal -->
+<div id="log-modal" class="hidden fixed inset-0 z-[100] bg-black/60 backdrop-blur-sm items-center justify-center p-4">
+    <div class="bg-surface-container border border-outline-variant rounded-xl p-6 w-full max-w-md shadow-2xl">
+        <div class="flex justify-between items-center mb-6">
+            <h3 class="font-headline-md text-headline-md">Log Savings</h3>
+            <button id="close-log-modal" class="text-on-surface-variant hover:text-on-surface">
+                <span class="material-symbols-outlined">close</span>
+            </button>
+        </div>
+        <form id="log-form" class="space-y-4">
+            <div>
+                <label id="log-amount-label" class="block font-label-md text-on-surface-variant mb-1">Amount ($)</label>
+                <input type="number" id="log-amount" step="0.01" min="0.01" required class="w-full bg-surface-container-high border border-outline-variant rounded-lg px-4 py-3 text-on-surface focus:outline-none focus:border-primary-container transition-all">
+            </div>
+            <div>
+                <label class="block font-label-md text-on-surface-variant mb-1">Note (Optional)</label>
+                <input type="text" id="log-note" placeholder="e.g. Skipped coffee" class="w-full bg-surface-container-high border border-outline-variant rounded-lg px-4 py-3 text-on-surface focus:outline-none focus:border-primary-container transition-all">
+            </div>
+            <div>
+                <label class="block font-label-md text-on-surface-variant mb-1">Date</label>
+                <input type="date" id="log-date" class="w-full bg-surface-container-high border border-outline-variant rounded-lg px-4 py-3 text-on-surface focus:outline-none focus:border-primary-container transition-all" title="Leave empty for today">
+            </div>
+            <div>
+                <label class="block font-label-md text-on-surface-variant mb-1">Source</label>
+                <select id="log-source" class="w-full bg-surface-container-high border border-outline-variant rounded-lg px-4 py-3 text-on-surface focus:outline-none focus:border-primary-container transition-all">
+                    <option>Data labeling</option>
+                    <option>Tutoring</option>
+                    <option>Freelance</option>
+                    <option>Other</option>
+                </select>
+            </div>
+            <div id="log-source-custom-wrap" class="hidden">
+                <label class="block font-label-md text-on-surface-variant mb-1">Other Source</label>
+                <input type="text" id="log-source-custom" class="w-full bg-surface-container-high border border-outline-variant rounded-lg px-4 py-3 text-on-surface focus:outline-none focus:border-primary-container transition-all">
+            </div>
+            <button type="submit" class="w-full bg-primary-container text-on-primary font-bold py-3 rounded-lg hover:brightness-110 transition-all mt-6">
+                Save Entry
+            </button>
+        </form>
+    </div>
+</div>
+
+<div id="edit-monthly-target-modal" class="hidden fixed inset-0 z-[100] bg-black/60 backdrop-blur-sm items-center justify-center p-4">
+    <div class="bg-surface-container border border-outline-variant rounded-xl p-6 w-full max-w-sm shadow-2xl">
+        <h3 class="font-headline-md mb-4">Edit Monthly Target</h3>
+        <form id="edit-monthly-target-form">
+            <div>
+                <label id="monthly-target-label" class="block font-label-md text-on-surface-variant mb-1">Target Amount ($)</label>
+                <input type="number" id="new-monthly-target-amount" step="1" min="1" required class="w-full bg-surface-container-high border border-outline-variant rounded-lg px-4 py-3 text-on-surface mb-6">
+            </div>
+            <div class="flex gap-2">
+                <button type="button" id="close-monthly-target-modal" class="flex-1 py-3 border border-outline-variant rounded-lg text-on-surface-variant hover:text-on-surface">Cancel</button>
+                <button type="submit" class="flex-1 bg-primary-container text-on-primary font-bold py-3 rounded-lg hover:brightness-110">Save</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<div id="edit-weekly-target-modal" class="hidden fixed inset-0 z-[100] bg-black/60 backdrop-blur-sm items-center justify-center p-4">
+    <div class="bg-surface-container border border-outline-variant rounded-xl p-6 w-full max-w-sm shadow-2xl">
+        <h3 class="font-headline-md mb-4">Edit Weekly Target</h3>
+        <form id="edit-weekly-target-form">
+            <div>
+                <label id="weekly-target-label" class="block font-label-md text-on-surface-variant mb-1">Target Amount ($)</label>
+                <input type="number" id="new-weekly-target-amount" step="1" min="1" required class="w-full bg-surface-container-high border border-outline-variant rounded-lg px-4 py-3 text-on-surface mb-6">
+            </div>
+            <div class="flex gap-2">
+                <button type="button" id="close-weekly-target-modal" class="flex-1 py-3 border border-outline-variant rounded-lg text-on-surface-variant hover:text-on-surface">Cancel</button>
+                <button type="submit" class="flex-1 bg-primary-container text-on-primary font-bold py-3 rounded-lg hover:brightness-110">Save</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<div id="create-goal-modal" class="hidden fixed inset-0 z-[100] bg-black/60 backdrop-blur-sm items-center justify-center p-4">
+    <div class="bg-surface-container border border-outline-variant rounded-xl p-6 w-full max-w-sm shadow-2xl">
+        <h3 class="font-headline-md mb-4">Create New Goal</h3>
+        <form id="create-goal-form" class="space-y-4">
+            <div>
+                <label class="block font-label-md text-on-surface-variant mb-1">Goal Name</label>
+                <input type="text" id="new-goal-name" required class="w-full bg-surface-container-high border border-outline-variant rounded-lg px-4 py-3 text-on-surface">
+            </div>
+            <div>
+                <label id="goal-amount-label" class="block font-label-md text-on-surface-variant mb-1">Target Amount ($)</label>
+                <input type="number" id="new-goal-amount" step="1" required class="w-full bg-surface-container-high border border-outline-variant rounded-lg px-4 py-3 text-on-surface">
+            </div>
+            <div>
+                <label class="block font-label-md text-on-surface-variant mb-1">Deadline (Optional)</label>
+                <input type="date" id="new-goal-deadline" class="w-full bg-surface-container-high border border-outline-variant rounded-lg px-4 py-3 text-on-surface">
+            </div>
+            <div class="flex gap-2 mt-6">
+                <button type="button" id="close-goal-modal" class="flex-1 py-3 border border-outline-variant rounded-lg text-on-surface-variant hover:text-on-surface">Cancel</button>
+                <button type="submit" class="flex-1 bg-primary-container text-on-primary font-bold py-3 rounded-lg hover:brightness-110">Create</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script type="module" src="/src/main.js"></script>
+</body></html>
