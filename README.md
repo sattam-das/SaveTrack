@@ -240,11 +240,11 @@ Key test areas:
 - [x] Calendar view for historical entries
 - [x] Timezone-safe date utilities
 - [x] Offline asset bundling (no CDN dependency)
-- [ ] Daily streak tracking and reminder notifications
-- [ ] Recurring target resets (weekly/monthly auto-reset)
-- [ ] Goal deadline tracking in UI
-- [ ] Dynamic "Recent Logs" list on dashboard
-- [ ] `.exe` release distribution and auto-updater
+- [x] Daily streak tracking and reminder notifications
+- [x] Recurring target resets (weekly/monthly auto-reset)
+- [x] Goal deadline tracking in UI
+- [x] Dynamic "Recent Logs" list on dashboard
+- [x] `.exe` release distribution and auto-updater
 
 ---
 
